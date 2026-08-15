@@ -15,33 +15,6 @@ DSH 插件，在设置页的「用量」section 渲染 MiniMax Token Plan 实时
 
 ## 安装
 
-### 方式一：`dsh plugin add`（DSH 官方，**推荐**）
-
-trusted-plugin 声明了 `dsh.bundle` manifest，可以直接走 DSH 官方安装命令：
-
-```sh
-# 从 GitHub（推荐，git 源一行）
-dsh plugin --profile web add "github:Floating-Dreaming/dsh-minimax-usage#main"
-
-# 从 npm
-dsh plugin --profile web add @floatingdeaming/minimax-usage
-
-# 从本地 checkout
-dsh plugin --profile web add ./trusted-plugin
-```
-
-`dsh plugin add` 会自动：
-- 初始化 profile（如果还没有）
-- 跑 `pnpm install` 把包放进 profile 的 `node_modules/`
-- 把 bundle 加进 profile 的 `dsh.profile.bundles`
-- 把 `cordis.patch.yml` 里 `- insert: - id: minimax-usage` 的行写进 profile composition
-
-装完**重启 DSH**。
-
-### 方式二：手动 install 脚本（兼容老 profile 布局）
-
-如果你的 profile 不是 DSH 官方布局（老式 `cordis.patch.yml` + workspace 符号链接结构），或者你想细看每一步在做什么：
-
 | OS | 命令 |
 |---|---|
 | Windows | `cd D:\Code\minimax-usage-plugin && .\install.ps1` |
@@ -55,11 +28,13 @@ dsh plugin --profile web add ./trusted-plugin
 # PowerShell
 .\install.ps1 -ApiKey 'sk-cp-your-key-here'
 .\install.ps1 -SkipKey       # 只部署 trusted plugin，不写 key
+.\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage   # 从 npm 安装
 ```
 
 ```bash
 # bash
 ./install.sh --key 'sk-cp-your-key-here'
+./install.sh --source npm --npm-name @floatingdeaming/minimax-usage
 ```
 
 脚本做了什么（幂等，已有文件不被覆盖）：
@@ -70,7 +45,13 @@ dsh plugin --profile web add ./trusted-plugin
 4. 校验 / 补齐 profile 的 `pnpm-workspace.yaml` 的 packages 列表
 5. 校验 / 补齐 profile 的 `cordis.patch.yml` 的 `- insert:` 行
 6. 写 `~/.dsh/.credentials.yaml`（如果给了 key）
-7. 跑 `pnpm install`（如果 pnpm 在 PATH 上）
+7. 跑 `npm install`（默认；pnpm 也会试）
+
+### 为什么不用 `dsh plugin add`
+
+`trusted-plugin/` 声明了 `dsh.bundle` manifest，理论上 `dsh plugin --profile web add @floatingdeaming/minimax-usage` 也能跑通。但 `dsh plugin add` 内部转发给 `pnpm add`，如果你的 home 目录自己是个 pnpm workspace（很多 DSH 用户的 `~/.npmrc` 旁边就放着 `pnpm-workspace.yaml`），pnpm 会拒绝给 profile 子目录添加 dep，**装不成功**。
+
+`install.ps1` / `install.sh` 不依赖 pnpm 的 workspace 检测，直接写文件再用 `npm install` 收尾，所以在所有 DSH profile 布局下都能跑通。
 
 ## 装完之后
 
