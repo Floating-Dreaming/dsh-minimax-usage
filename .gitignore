@@ -23,3 +23,6 @@ build/
 .env
 .env.local
 *.pem
+
+# Local Windows credential helper (bridges gh OAuth token -> git); not part of the plugin
+git-credential-helper.ps1

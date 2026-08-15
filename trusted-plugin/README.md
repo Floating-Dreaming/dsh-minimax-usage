@@ -23,7 +23,7 @@ Backed by `https://www.minimaxi.com/v1/token_plan/remains`. Features:
 
 This is a DSH **trusted** plugin, not a regular npm dependency. DSH loads it via
 `pnpm` workspace + cordis composition patch. See the parent repo
-[`dsh-minimax-usage`](https://github.com/your-org/dsh-minimax-usage) for the
+[`dsh-minimax-usage`](https://github.com/Floating-Dreaming/dsh-minimax-usage) for the
 `install.ps1` / `install.sh` scripts that wire it into DSH.
 
 If you want to publish to your own npm registry:

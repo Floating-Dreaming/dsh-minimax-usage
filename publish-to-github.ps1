@@ -10,29 +10,35 @@
 #   4. 用 gh api 配置 branch protection（main 分支）
 #   5. 开 PR 并 squash merge 到 main
 #
-# 前提：已 `gh auth login`，且 git 仓库已经在 D:\Code\tools-plugin\minimax-usage-plugin
+# 前提：已 `gh auth login`，且 git 仓库已经在 D:\Code\minimax-usage-plugin
 
 $ErrorActionPreference = 'Stop'
 
-$RepoDir       = 'D:\Code\tools-plugin\minimax-usage-plugin'
+$RepoDir       = 'D:\Code\minimax-usage-plugin'
 $RemoteOwner   = 'Floating-Dreaming'
 $RemoteRepo    = 'dsh-minimax-usage'
 $RemoteUrl     = "https://github.com/$RemoteOwner/$RemoteRepo.git"
 $AuthUrl       = $null
 $FeatureBranch = 'feat/initial-commit'
 $MainBranch    = 'main'
+# gh.exe 安装位置可能不在 PATH（winget 默认装到 Program Files\GitHub CLI\）
+$GhExe         = (Get-Command gh -ErrorAction SilentlyContinue).Source
+if (-not $GhExe) {
+  $candidate = 'C:\Program Files\GitHub CLI\gh.exe'
+  if (Test-Path $candidate) { $GhExe = $candidate }
+}
+if (-not $GhExe) {
+  throw "gh CLI not found. Install: winget install --id GitHub.cli"
+}
+Write-Host "Using gh: $GhExe"
 
 # ---- 0. Pre-flight checks ---------------------------------------------------
 if (-not (Test-Path $RepoDir)) {
   throw "Repo dir not found: $RepoDir"
 }
-$gh = Get-Command gh -ErrorAction SilentlyContinue
-if (-not $gh) {
-  throw "gh CLI not found. Install: winget install --id GitHub.cli"
-}
 Push-Location $RepoDir
 try {
-  $auth = (& gh auth status 2>&1) | Out-String
+  $auth = (& $GhExe auth status 2>&1) | Out-String
   if ($auth -notmatch 'Logged in to github.com') {
     throw "gh not authenticated. Run: gh auth login"
   }
@@ -55,7 +61,7 @@ finally { Pop-Location }
 # ---- 1. Get token from gh and push with embedded-token URL ------------------
 Push-Location $RepoDir
 try {
-  $token = & gh auth token 2>$null
+  $token = & $GhExe auth token 2>$null
   if (-not $token) { throw "Failed to get gh auth token" }
   Write-Host "Got token: $($token.Substring(0,8))..."
 
@@ -110,7 +116,7 @@ Set-Content -Path $protectionPath -Value $protectionJson -Encoding utf8NoBOM
 
 $apiUrl = "repos/$RemoteOwner/$RemoteRepo/branches/$MainBranch/protection"
 try {
-  & gh api -X PUT --input $protectionPath $apiUrl 2>&1 | Out-Host
+  & $GhExe api -X PUT --input $protectionPath $apiUrl 2>&1 | Out-Host
   Write-Host "Branch protection set on $MainBranch."
 } catch {
   Write-Host "Branch protection failed (might be OK if branch has no commits yet): $_"
@@ -134,7 +140,7 @@ try {
   $prBodyPath = Join-Path $env:TEMP "dsh-pr-body.md"
   Set-Content -Path $prBodyPath -Value $prBody -Encoding utf8NoBOM
 
-  $prOut = & gh pr create --base $MainBranch --head $FeatureBranch --title 'Initial commit: DSH MiniMax usage plugin (v17)' --body-file $prBodyPath 2>&1 | Out-String
+  $prOut = & $GhExe pr create --base $MainBranch --head $FeatureBranch --title 'Initial commit: DSH MiniMax usage plugin (v17)' --body-file $prBodyPath 2>&1 | Out-String
   Write-Host "PR create output: $prOut"
 
   # Extract PR number from output (URL like https://github.com/.../pull/N)
@@ -147,11 +153,11 @@ try {
     # Only works if the account is the only required approver (1 approval = self)
     Write-Host ""
     Write-Host "Approving PR #$prNumber ..."
-    & gh pr review $prNumber --approve 2>&1 | Out-Host
+    & $GhExe pr review $prNumber --approve 2>&1 | Out-Host
 
     Write-Host ""
     Write-Host "Squash merging PR #$prNumber ..."
-    & gh pr merge $prNumber --squash --delete-branch 2>&1 | Out-Host
+    & $GhExe pr merge $prNumber --squash --delete-branch 2>&1 | Out-Host
     Write-Host "Merged."
   } else {
     Write-Host "Could not parse PR number from output. Merge manually."
