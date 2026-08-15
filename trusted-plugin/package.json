@@ -9,8 +9,14 @@
   },
   "files": [
     "index.js",
+    "cordis.patch.yml",
     "README.md"
   ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "scripts": {
     "prepublishOnly": "node -e \"const p=require('./package.json');if(!p.name)throw new Error('name required');if(!/^@?[a-z0-9][a-z0-9._-]*\\/[a-z0-9._-]+$|^[a-z0-9][a-z0-9._-]*$/.test(p.name))throw new Error('invalid package name: '+p.name);console.log('OK to publish',p.name,'@',p.version);\""
   },
