@@ -109,14 +109,18 @@ fi
 # ---- 2. Run npm/pnpm install ---------------------------------------------
 if [[ "$SOURCE" == "npm" ]]; then
   if command -v npm >/dev/null 2>&1; then
-    echo "Running npm install in $PROFILE_DIR ..."
+    # Clear stale lockfiles so npm picks the latest version that satisfies
+    # the dependency constraint instead of reusing the pinned old version.
+    rm -f "$PROFILE_DIR/pnpm-lock.yaml" "$PROFILE_DIR/package-lock.json"
+    echo "Running npm install in $PROFILE_DIR (cleared lockfiles to pull latest) ..."
     (cd "$PROFILE_DIR" && npm install) || echo "npm install failed; DSH may not load the plugin correctly." >&2
   else
     echo "npm not on PATH — install it and run 'npm install' in $PROFILE_DIR manually" >&2
   fi
 else
   if command -v pnpm >/dev/null 2>&1; then
-    echo "Running pnpm install in $PROFILE_DIR ..."
+    rm -f "$PROFILE_DIR/pnpm-lock.yaml" "$PROFILE_DIR/package-lock.json"
+    echo "Running pnpm install in $PROFILE_DIR (cleared lockfiles to pull latest) ..."
     (cd "$PROFILE_DIR" && pnpm install) || echo "pnpm install failed; DSH may not load the plugin correctly." >&2
   else
     echo "pnpm not on PATH — skipping install. If DSH fails to load, run 'pnpm install' in $PROFILE_DIR" >&2

@@ -102,7 +102,11 @@ $npmCmd = Get-Command npm -ErrorAction SilentlyContinue
 
 if ($Source -eq 'npm') {
   if ($npmCmd) {
-    Write-Host "Running npm install in $ProfileDir ..."
+    # Clear stale lockfiles so npm picks the latest version that satisfies
+    # the dependency constraint instead of reusing the pinned old version.
+    Remove-Item (Join-Path $ProfileDir 'pnpm-lock.yaml') -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $ProfileDir 'package-lock.json') -Force -ErrorAction SilentlyContinue
+    Write-Host "Running npm install in $ProfileDir (cleared lockfiles to pull latest) ..."
     Push-Location $ProfileDir
     try { & npm install 2>&1 | Out-Host } catch { Write-Host "npm install failed: $_" -ForegroundColor Yellow }
     Pop-Location
@@ -111,7 +115,9 @@ if ($Source -eq 'npm') {
   }
 } else {
   if ($npm) {
-    Write-Host "Running pnpm install in $ProfileDir ..."
+    Remove-Item (Join-Path $ProfileDir 'pnpm-lock.yaml') -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $ProfileDir 'package-lock.json') -Force -ErrorAction SilentlyContinue
+    Write-Host "Running pnpm install in $ProfileDir (cleared lockfiles to pull latest) ..."
     Push-Location $ProfileDir
     try { & pnpm install 2>&1 | Out-Host } catch { Write-Host "pnpm install failed: $_" -ForegroundColor Yellow }
     Pop-Location
