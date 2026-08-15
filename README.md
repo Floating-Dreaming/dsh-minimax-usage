@@ -15,12 +15,43 @@ DSH 插件，在设置页的「用量」section 渲染 MiniMax Token Plan 实时
 
 ## 安装
 
+两种方式，**任选其一**。
+
+### 方式一：DSH 官方 `dsh plugin add`
+
+`trusted-plugin/` 声明了 `dsh.bundle` manifest，DSH 官方安装命令直接认：
+
+```sh
+# 从 GitHub（git 源一行）
+dsh plugin --profile web add "github:Floating-Dreaming/dsh-minimax-usage#main"
+
+# 从 npm
+dsh plugin --profile web add @floatingdeaming/minimax-usage
+
+# 从本地 checkout
+dsh plugin --profile web add ./trusted-plugin
+```
+
+DSH 会自动跑 `pnpm add`、把 bundle 加进 `dsh.profile.bundles`、把 `cordis.patch.yml` insert 行写进 composition。装完**重启 DSH**。
+
+⚠️ **如果 `pnpm add` 报 `[ERR_PNPM_ADDING_TO_ROOT]`**，说明你的 home 目录自己是个 pnpm workspace（很多 DSH 用户在 `~/pnpm-workspace.yaml` 装了一堆工具），pnpm 拒绝给 profile 子目录加 dep。两个 workaround：
+
+```sh
+# 方案 A：忽略 workspace root 检查（pnpm 仍会安装，但会在 home 的 pnpm-workspace.yaml 里改东西）
+echo "ignore-workspace-root-check=true" >> ~/.npmrc
+dsh plugin --profile web add @floatingdeaming/minimax-usage
+
+# 方案 B：直接走方式二
+```
+
+### 方式二：`install.ps1` / `install.sh`（直接写文件，不依赖 pnpm 检测）
+
 | OS | 命令 |
 |---|---|
 | Windows | `cd D:\Code\minimax-usage-plugin && .\install.ps1` |
 | macOS / Linux / WSL / Git Bash | `cd /path/to/minimax-usage-plugin && ./install.sh` |
 
-从 npm 装（已发布的包）：
+从 npm 装：
 
 ```powershell
 .\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage
