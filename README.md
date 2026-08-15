@@ -88,7 +88,7 @@ DSH 主进程 (Node)                          DSH 浏览器 (React)
 ### Windows
 
 ```powershell
-cd D:\Code\tools-plugin\minimax-usage-plugin
+cd D:\Code\minimax-usage-plugin
 .\install.ps1
 ```
 
@@ -99,7 +99,7 @@ cd D:\Code\tools-plugin\minimax-usage-plugin
 ```powershell
 .\install.ps1 -ApiKey 'sk-cp-your-key-here'
 .\install.ps1 -SkipKey      # 只部署 trusted plugin，不写 key
-.\install.ps1 -Source npm -NpmName @your-scope/dsh-minimax-usage   # 从 npm 安装
+.\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage   # 从 npm 安装
 ```
 
 ### macOS / Linux（Windows + Git Bash / WSL 也行）
@@ -108,7 +108,7 @@ cd D:\Code\tools-plugin\minimax-usage-plugin
 cd /path/to/minimax-usage-plugin
 ./install.sh
 ./install.sh --key 'sk-cp-your-key-here'
-./install.sh --source npm --npm-name @your-scope/dsh-minimax-usage
+./install.sh --source npm --npm-name @floatingdeaming/minimax-usage
 ```
 
 ### install 脚本做的事（幂等）
@@ -161,7 +161,7 @@ DSH 主进程自身要能在对应平台跑——这个跟插件无关。
 | 路径 | 适用场景 | 操作 |
 |---|---|---|
 | **本地源码部署** | 自己 / 团队内开发测试 | `.\install.ps1`（默认 local 模式） |
-| **npm 公开分发** | 跨机器 / 跨团队 / 共享给社区 | 先 `npm publish` 发布 trusted-plugin 包，然后 `.\install.ps1 -Source npm -NpmName @your-scope/dsh-minimax-usage` |
+| **npm 公开分发** | 跨机器 / 跨团队 / 共享给社区 | 先 `npm publish` 发布 trusted-plugin 包，然后 `.\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage` |
 | **GitHub 公开** | 代码开源 / 版本管理 / 社区贡献 | 在 GitHub 建仓库并 push，然后 `git tag v1.0.0 && git push --tags` 触发 GitHub Actions 自动发 npm |
 
 ### 发布 trusted plugin 到 npm
@@ -190,39 +190,37 @@ npm publish --access public    # scoped 包必须加 --access public
 ./publish.sh --tag beta
 ```
 
-发布完成后，得到 `https://www.npmjs.com/package/@dsh-extras/minimax-usage`（或你自定义的 scope / name）。
+发布完成后，得到 `https://www.npmjs.com/package/@floatingdeaming/minimax-usage`（或你自定义的 scope / name）。
 
 ### 推送到 GitHub
 
 `publish-to-github.ps1` 一站式脚本（你需要在本机 PowerShell 跑，不在 sandbox 里）：
 
 ```powershell
-cd D:\Code\tools-plugin\minimax-usage-plugin
+cd D:\Code\minimax-usage-plugin
 .\publish-to-github.ps1
 ```
 
 会一次性做完：
-- 用 gh 取 OAuth token
-- 推 `feat/initial-commit` 分支
+- 用 gh 取 OAuth token（如果 gh.exe 不在 PATH 会自动定位 `C:\Program Files\GitHub CLI\gh.exe`）
+- 推 `main` 分支（embedded-token URL，push 完立刻清掉）
+- 改 GitHub default branch + 删 `feat/initial-commit`
 - 用 `gh api` 配 main 分支的 branch protection
-- 开 PR → 自审 → squash merge
+- 给仓加 `dsh-plugin` 等 topics
 
 ## 注册到 DSH 插件生态
 
 DSH 插件市场有几条主要路径：
 
-| 路径 | URL | 操作 |
-|---|---|---|
-| **vlln/plugin-registry** | https://github.com/vlln/plugin-registry | 开 PR 加你的 plugin 条目 |
-| **dsh-plugins**（npm 集合包） | https://www.npmjs.com/package/dsh-plugins | `npm publish` 一并发布 |
-| **awesome-dsh-plugin** | https://github.com/awesome-dsh-plugin/awesome-dsh-plugin | 开 PR 加到 awesome list |
-| **HubaKing/dsh-community-plugins** | https://github.com/HubaKing/dsh-community-plugins | 装这个 skill 进 DSH，里面介绍所有市场 |
+| 路径 | URL | 操作 | 状态 |
+|---|---|---|---|
+| **GitHub 仓** | https://github.com/Floating-Dreaming/dsh-minimax-usage | `git push` + branch protection | ✅ 已发布 |
+| **npm 包** | https://www.npmjs.com/package/@floatingdeaming/minimax-usage | `npm publish --access public` | ✅ v1.0.0 已发布 |
+| **awesome-dsh-plugin** | https://github.com/awesome-dsh-plugin/awesome-dsh-plugin | 开 PR 加到 UI Enhancements | ✅ [PR #632](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/632) 待合并 |
+| **vlln/plugin-registry** | https://github.com/vlln/plugin-registry | ⚠️ 不是插件目录；它是「薄控制台 + make-dsh-plugin skill」基础设施仓，没有插件收录流程 | 跳过 |
+| **HubaKing/dsh-community-plugins** | https://github.com/HubaKing/dsh-community-plugins | 装这个 skill 进 DSH，里面介绍所有市场 | 可选 |
 
-提交 PR 时内容大致：
-
-- 标题：`Add dsh-minimax-usage plugin`
-- 内容：插件名 + 一句话功能 + GitHub URL + npm URL（如果有）+ 用法示例
-- 维护方会跑 `dsh-plugin-doctor` 之类的检查
+awesome-dsh-plugin 维护方会跑 `dsh-plugin-doctor` 之类的检查；本插件用的是 trusted-plugin + dynamic-client 架构（API key 必须留在主进程），没有 `dsh.bundle` manifest，已在 PR body 里说明。
 
 ## 数据来源说明
 

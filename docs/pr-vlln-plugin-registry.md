@@ -4,7 +4,7 @@
 
 - **Name**: `dsh-minimax-usage`
 - **GitHub**: https://github.com/Floating-Dreaming/dsh-minimax-usage
-- **npm**: https://www.npmjs.com/package/@dsh-extras/minimax-usage
+- **npm**: https://www.npmjs.com/package/@floatingdeaming/minimax-usage
 - **License**: MIT
 - **Category**: Settings / Usage display
 
@@ -37,7 +37,7 @@ If `MINIMAX_API_KEY` is not configured, the Settings section is hidden entirely 
 ./install.sh --key 'sk-cp-...'
 
 # From npm (after publish)
-.\install.ps1 -Source npm -NpmName @dsh-extras/minimax-usage -ApiKey 'sk-cp-...'
+.\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage -ApiKey 'sk-cp-...'
 ```
 
 After install: restart DSH, then in a new session run `cordis_define` with the bundled `cordis_define_payload.json` + `cordis_run`.

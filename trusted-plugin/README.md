@@ -1,4 +1,4 @@
-# @dsh-extras/minimax-usage
+# @floatingdeaming/minimax-usage
 
 > DSH (DeepSeek Harness) trusted plugin that exposes the user's MiniMax Token Plan
 > usage data via the `minimaxUsage` service.
@@ -39,7 +39,7 @@ Then in the DSH profile's `package.json`:
 ```json
 {
   "dependencies": {
-    "@dsh-extras/minimax-usage": "^1.0.0"
+    "@floatingdeaming/minimax-usage": "^1.0.0"
   }
 }
 ```
