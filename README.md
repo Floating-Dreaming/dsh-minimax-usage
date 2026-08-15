@@ -15,47 +15,60 @@ DSH 插件，在设置页的「用量」section 渲染 MiniMax Token Plan 实时
 
 ## 安装
 
-| OS | install 脚本 | 备注 |
-|---|---|---|
-| Windows | `install.ps1`（PowerShell） | 推荐 |
-| macOS / Linux | `install.sh`（bash） | |
-| Windows + WSL / Git Bash | `install.sh`（bash） | bash 也行 |
+### 方式一：`dsh plugin add`（DSH 官方，**推荐**）
 
-### Windows
+trusted-plugin 声明了 `dsh.bundle` manifest，可以直接走 DSH 官方安装命令：
 
-```powershell
-cd D:\Code\minimax-usage-plugin
-.\install.ps1
+```sh
+# 从 GitHub（推荐，git 源一行）
+dsh plugin --profile web add "github:Floating-Dreaming/dsh-minimax-usage#main"
+
+# 从 npm
+dsh plugin --profile web add @floatingdeaming/minimax-usage
+
+# 从本地 checkout
+dsh plugin --profile web add ./trusted-plugin
 ```
+
+`dsh plugin add` 会自动：
+- 初始化 profile（如果还没有）
+- 跑 `pnpm install` 把包放进 profile 的 `node_modules/`
+- 把 bundle 加进 profile 的 `dsh.profile.bundles`
+- 把 `cordis.patch.yml` 里 `- insert: - id: minimax-usage` 的行写进 profile composition
+
+装完**重启 DSH**。
+
+### 方式二：手动 install 脚本（兼容老 profile 布局）
+
+如果你的 profile 不是 DSH 官方布局（老式 `cordis.patch.yml` + workspace 符号链接结构），或者你想细看每一步在做什么：
+
+| OS | 命令 |
+|---|---|
+| Windows | `cd D:\Code\minimax-usage-plugin && .\install.ps1` |
+| macOS / Linux / WSL / Git Bash | `cd /path/to/minimax-usage-plugin && ./install.sh` |
 
 按提示贴入 `MINIMAX_API_KEY`（**必须用 Token Plan / Subscription Key，不是按量计费的 API Key**）。
 
 绕过交互：
 
 ```powershell
+# PowerShell
 .\install.ps1 -ApiKey 'sk-cp-your-key-here'
 .\install.ps1 -SkipKey       # 只部署 trusted plugin，不写 key
-.\install.ps1 -Source npm -NpmName @floatingdeaming/minimax-usage   # 从 npm 安装
 ```
-
-### macOS / Linux（Windows + Git Bash / WSL 也行）
 
 ```bash
-cd /path/to/minimax-usage-plugin
-./install.sh
+# bash
 ./install.sh --key 'sk-cp-your-key-here'
-./install.sh --source npm --npm-name @floatingdeaming/minimax-usage
 ```
 
-### install 脚本做了什么
-
-幂等的——已有文件不被覆盖：
+脚本做了什么（幂等，已有文件不被覆盖）：
 
 1. 部署 trusted plugin 源码到 `~/.dsh/profiles/web/minimax-usage/`
 2. 创建符号链接 `~/.dsh/profiles/web/node_modules/minimax-usage/` → 上面那个目录
-3. 校验 / 补齐 `package.json` 的 `"@floatingdeaming/minimax-usage"` 依赖
-4. 校验 / 补齐 `pnpm-workspace.yaml` 的 packages 列表
-5. 校验 / 补齐 `cordis.patch.yml` 的 `- insert:` 行
+3. 校验 / 补齐 profile 的 `package.json` 依赖
+4. 校验 / 补齐 profile 的 `pnpm-workspace.yaml` 的 packages 列表
+5. 校验 / 补齐 profile 的 `cordis.patch.yml` 的 `- insert:` 行
 6. 写 `~/.dsh/.credentials.yaml`（如果给了 key）
 7. 跑 `pnpm install`（如果 pnpm 在 PATH 上）
 
