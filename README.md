@@ -15,27 +15,6 @@ DSH 插件，在设置页的「用量」section 渲染 MiniMax Token Plan 实时
 
 ## 安装
 
-两种方式，**任选其一**。
-
-### 方式一：DSH 官方 `dsh plugin add`
-
-`trusted-plugin/` 声明了 `dsh.bundle` manifest，DSH 官方安装命令直接认：
-
-```sh
-# 从 GitHub（git 源一行）
-dsh plugin --profile web add "github:Floating-Dreaming/dsh-minimax-usage#main"
-
-# 从 npm
-dsh plugin --profile web add @floatingdeaming/minimax-usage
-
-# 从本地 checkout
-dsh plugin --profile web add ./trusted-plugin
-```
-
-装完**重启 DSH**。
-
-### 方式二：`install.ps1` / `install.sh`
-
 | OS | 命令 |
 |---|---|
 | Windows | `cd D:\Code\minimax-usage-plugin && .\install.ps1` |
@@ -56,6 +35,18 @@ dsh plugin --profile web add ./trusted-plugin
 4. 校验 / 补齐 profile 的 `pnpm-workspace.yaml` 的 packages 列表
 5. 校验 / 补齐 profile 的 `cordis.patch.yml` 的 `- insert:` 行
 6. 跑 `npm install`
+
+### 不要用 `dsh plugin add`
+
+虽然 `trusted-plugin/` 声明了 `dsh.bundle` manifest、DSH 的 `dsh plugin add` 命令理论上能认，但**这条路径在你的环境里会留下坏 state**——命令在报错**之前**就已经改写了 `~/.dsh/profiles/web/package.json`，把 npm 风格的 alias `"minimax-usage": "npm:@floatingdeaming/...@^1.0.0"` 改成 pnpm 风格的 `"minimax-usage": "@floatingdeaming/..."`，然后 pnpm add 这一步才挂掉。结果是：
+
+- `package.json` 被改坏，npm alias 失效
+- `node_modules/minimax-usage` 变成裸 junction，指向的目录没有 npm 必需的 name-shim `package.json`
+- Node 16+ ESM 解析器校验「导入名 ≠ package.json 里的 name」时直接 `ERR_MODULE_NOT_FOUND`
+
+**修复**（手工）：把 `package.json` 改回 npm 风格 alias + 跑 `npm install`。
+
+`install.ps1` / `install.sh` 不走这条路径——直接写文件 + 调 `npm install`，**没有破坏性**。
 
 ## 装完之后
 
