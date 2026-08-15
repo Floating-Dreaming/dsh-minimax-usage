@@ -1,6 +1,6 @@
 {
   "name": "@floatingdeaming/minimax-usage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DSH trusted plugin: provides ctx.minimaxUsage (getUsage / hasApiKey) by calling the MiniMax Token Plan API at /v1/token_plan/remains. Pairs with the dynamic minimax-usage client plugin for the Settings page UI.",
   "type": "module",
   "main": "index.js",
