@@ -1,4 +1,4 @@
-# install.ps1 — MiniMax 用量插件一键部署脚本 (Windows / PowerShell)
+﻿# install.ps1 — MiniMax 用量插件一键部署脚本 (Windows / PowerShell)
 #
 # macOS / Linux 请用 install.sh
 #
@@ -25,13 +25,19 @@
 param(
   [ValidateSet('local', 'npm')]
   [string]$Source = 'local',
-  [string]$NpmName = '@dsh-extras/minimax-usage',
+  [string]$NpmName = '@floatingdeaming/minimax-usage',
   [string]$ApiKey = "",
   [string]$DshHome = "",
   [switch]$SkipKey
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Portable UTF-8 (no BOM) writer — works in both Windows PowerShell 5.1 and PowerShell 7+
+function WriteUtf8NoBom {
+  param([string]$Path, [string]$Value)
+  [System.IO.File]::WriteAllText($Path, $Value, [System.Text.UTF8Encoding]::new($false))
+}
 
 # ---- 0. Resolve DSH home ---------------------------------------------------
 if (-not $DshHome) {
@@ -73,7 +79,8 @@ switch ($Source) {
     }
     $pkg = Get-Content $ProfilePkg -Raw | ConvertFrom-Json
     $pkg.dependencies | Add-Member -NotePropertyName $NpmName.Split('/')[-1] -NotePropertyValue $NpmName -Force
-    $pkg | ConvertTo-Json -Depth 10 | Set-Content -Path $ProfilePkg -Encoding utf8NoBOM
+    $newJson = $pkg | ConvertTo-Json -Depth 10
+    WriteUtf8NoBom -Path $ProfilePkg -Value $newJson
     Write-Host "Added $NpmName to $ProfilePkg dependencies"
   }
 }
@@ -122,7 +129,8 @@ if (Test-Path $ProfilePkg) {
     $pkg = Get-Content $ProfilePkg -Raw | ConvertFrom-Json
     if (-not $pkg.dependencies.'minimax-usage') {
       $pkg.dependencies | Add-Member -NotePropertyName 'minimax-usage' -NotePropertyValue 'workspace:*' -Force
-      $pkg | ConvertTo-Json -Depth 10 | Set-Content -Path $ProfilePkg -Encoding utf8NoBOM
+      $newJson = $pkg | ConvertTo-Json -Depth 10
+      WriteUtf8NoBom -Path $ProfilePkg -Value $newJson
       Write-Host "Added workspace:* dependency to $ProfilePkg"
     } else {
       Write-Host "package.json already has minimax-usage dependency"
@@ -142,7 +150,8 @@ if ($Source -eq 'local') {
       if ($content -notmatch 'minimax-usage') {
         $content += "`n  - minimax-usage`n"
       }
-      Set-Content -Path $WorkspaceYaml -Value $content -Encoding utf8NoBOM
+      WriteUtf8NoBom -Path $WorkspaceYaml -Value $content
+      Write-Host "Updated $WorkspaceYaml"
       Write-Host "Added minimax-usage to $WorkspaceYaml"
     } else {
       Write-Host "pnpm-workspace.yaml already lists minimax-usage"
@@ -156,7 +165,7 @@ if (Test-Path $PatchYaml) {
   $content = Get-Content $PatchYaml -Raw
   if ($content -notmatch '^\s*-\s*id:\s*minimax-usage' -and $content -notmatch 'id:\s*minimax-usage') {
     $append = "`n# Trusted MiniMax usage plugin: registers the minimaxUsage service`n- insert:`n    - id: minimax-usage`n      name: minimax-usage`n"
-    Set-Content -Path $PatchYaml -Value ($content + $append) -Encoding utf8NoBOM
+    WriteUtf8NoBom -Path $PatchYaml -Value ($content + $append)
     Write-Host "Added insert row to $PatchYaml"
   } else {
     Write-Host "cordis.patch.yml already has minimax-usage insert"
@@ -199,9 +208,9 @@ if (-not $SkipKey) {
         if (-not $existing.EndsWith("`n")) { $existing += "`n" }
         $existing += $keyLine + "`n"
       }
-      Set-Content -Path $credFile -Value $existing -Encoding utf8NoBOM
+      WriteUtf8NoBom -Path $credFile -Value $existing
     } else {
-      Set-Content -Path $credFile -Value ($keyLine + "`n") -Encoding utf8NoBOM
+      WriteUtf8NoBom -Path $credFile -Value ($keyLine + "`n")
     }
     Write-Host "Wrote MINIMAX_API_KEY to $credFile"
   }
@@ -229,7 +238,7 @@ Write-Host ""
 Write-Host "2. In a new DSH session, send this message to the agent:"
 Write-Host ""
 Write-Host '   请加载并启用 MiniMax 用量插件，依次执行：'
-Write-Host '   1) cordis_define 用 D:\Code\tools-plugin\minimax-usage-plugin\cordis_define_payload.json'
+Write-Host '   1) cordis_define 用 D:\Code\minimax-usage-plugin\cordis_define_payload.json'
 Write-Host '      的完整 JSON 作为参数（plugin / name / purpose / code 四个字段都在里面）'
 Write-Host '   2) 拿到返回的 pluginId 和 packageId 后，cordis_run 调 mode="run"'
 Write-Host '   3) 如果提示 awaiting-approval，请点浏览器顶部的「同意」授权该客户端包'

@@ -1,5 +1,5 @@
 {
-  "name": "@dsh-extras/minimax-usage",
+  "name": "@floatingdeaming/minimax-usage",
   "version": "1.0.0",
   "description": "DSH trusted plugin: provides ctx.minimaxUsage (getUsage / hasApiKey) by calling the MiniMax Token Plan API at /v1/token_plan/remains. Pairs with the dynamic minimax-usage client plugin for the Settings page UI.",
   "type": "module",
@@ -28,13 +28,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/dsh-minimax-usage.git",
+    "url": "https://github.com/Floating-Dreaming/dsh-minimax-usage.git",
     "directory": "trusted-plugin"
   },
   "bugs": {
-    "url": "https://github.com/your-org/dsh-minimax-usage/issues"
+    "url": "https://github.com/Floating-Dreaming/dsh-minimax-usage/issues"
   },
-  "homepage": "https://github.com/your-org/dsh-minimax-usage#readme",
+  "homepage": "https://github.com/Floating-Dreaming/dsh-minimax-usage#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

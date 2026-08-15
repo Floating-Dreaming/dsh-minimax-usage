@@ -1,4 +1,4 @@
-# @dsh-extras/minimax-usage
+# @floatingdeaming/minimax-usage
 
 > DSH (DeepSeek Harness) trusted plugin that exposes the user's MiniMax Token Plan
 > usage data via the `minimaxUsage` service.
@@ -23,7 +23,7 @@ Backed by `https://www.minimaxi.com/v1/token_plan/remains`. Features:
 
 This is a DSH **trusted** plugin, not a regular npm dependency. DSH loads it via
 `pnpm` workspace + cordis composition patch. See the parent repo
-[`dsh-minimax-usage`](https://github.com/your-org/dsh-minimax-usage) for the
+[`dsh-minimax-usage`](https://github.com/Floating-Dreaming/dsh-minimax-usage) for the
 `install.ps1` / `install.sh` scripts that wire it into DSH.
 
 If you want to publish to your own npm registry:
@@ -39,7 +39,7 @@ Then in the DSH profile's `package.json`:
 ```json
 {
   "dependencies": {
-    "@dsh-extras/minimax-usage": "^1.0.0"
+    "@floatingdeaming/minimax-usage": "^1.0.0"
   }
 }
 ```

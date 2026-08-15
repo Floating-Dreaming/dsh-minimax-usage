@@ -23,7 +23,7 @@
 set -euo pipefail
 
 SOURCE="local"
-NPM_NAME="@dsh-extras/minimax-usage"
+NPM_NAME="@floatingdeaming/minimax-usage"
 API_KEY=""
 DSH_HOME=""
 SKIP_KEY=0
