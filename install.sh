@@ -16,27 +16,25 @@
 # 用法：
 #   ./install.sh                                       # 本地源码模式
 #   ./install.sh --source npm --npm-name @you/pkg      # npm 模式
-#   ./install.sh --key 'sk-cp-...'                     # 直接传 key
 #   ./install.sh --dsh-home ~/custom                   # 自定义 DSH home
-#   ./install.sh --skip-key                            # 只部署 trusted plugin，不配置 key
+#
+# 注意：
+#   - API key (MINIMAX_API_KEY) 由 DSH 自己的 credential 系统管理，本脚本不碰
+#   - trusted plugin 修改后必须重启 DSH 主进程才会重新加载
 
 set -euo pipefail
 
 SOURCE="local"
 NPM_NAME="@floatingdeaming/minimax-usage"
-API_KEY=""
 DSH_HOME=""
-SKIP_KEY=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --source)    SOURCE="$2"; shift 2 ;;
     --npm-name)  NPM_NAME="$2"; shift 2 ;;
-    --key)       API_KEY="$2"; shift 2 ;;
     --dsh-home)  DSH_HOME="$2"; shift 2 ;;
-    --skip-key)  SKIP_KEY=1; shift ;;
     -h|--help)
-      sed -n '2,17p' "$0"; exit 0 ;;
+      sed -n '2,16p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
   esac
 done
@@ -188,67 +186,9 @@ EOF
   fi
 fi
 
-# ---- 6. Configure API key --------------------------------------------------
-RESOLVED_KEY=""
-if [[ $SKIP_KEY -eq 0 ]]; then
-  if [[ -n "$API_KEY" ]]; then
-    RESOLVED_KEY="$API_KEY"
-  elif [[ -n "${MINIMAX_API_KEY:-}" ]]; then
-    RESOLVED_KEY="$MINIMAX_API_KEY"
-    echo "Using existing MINIMAX_API_KEY environment variable."
-  fi
-
-  if [[ -z "$RESOLVED_KEY" ]]; then
-    echo ""
-    echo "MINIMAX_API_KEY is not set."
-    echo "Get your Token Plan key from https://www.minimaxi.com/ (NOT the metered-billing key)."
-    echo ""
-    read -rs -p "Paste your MINIMAX_API_KEY (input hidden): " RESOLVED_KEY
-    echo ""
-    if [[ -z "$RESOLVED_KEY" ]]; then
-      read -p "Paste your MINIMAX_API_KEY (visible): " RESOLVED_KEY
-    fi
-  fi
-
-  if [[ -n "$RESOLVED_KEY" ]]; then
-    CRED_FILE="$DSH_HOME/.credentials.yaml"
-    ESCAPED_KEY="${RESOLVED_KEY//\'/\'\'}"
-    KEY_LINE="MINIMAX_API_KEY: '${ESCAPED_KEY}'"
-
-    if [[ -f "$CRED_FILE" ]]; then
-      if grep -qE '^[[:space:]]*MINIMAX_API_KEY[[:space:]]*:' "$CRED_FILE"; then
-        TMP_FILE="$(mktemp)"
-        sed -E "s|^[[:space:]]*MINIMAX_API_KEY[[:space:]]*:.*$|${KEY_LINE//|/\\|}|" "$CRED_FILE" > "$TMP_FILE"
-        mv "$TMP_FILE" "$CRED_FILE"
-      else
-        if [[ -s "$CRED_FILE" ]] && [[ "$(tail -c 1 "$CRED_FILE" | wc -l)" -eq 0 ]]; then
-          echo "" >> "$CRED_FILE"
-        fi
-        echo "$KEY_LINE" >> "$CRED_FILE"
-      fi
-    else
-      mkdir -p "$DSH_HOME"
-      echo "$KEY_LINE" > "$CRED_FILE"
-    fi
-    echo "Wrote MINIMAX_API_KEY to $CRED_FILE"
-  fi
-fi
-
-# ---- 7. Summary and next-step instructions --------------------------------
-if [[ -n "$RESOLVED_KEY" ]]; then
-  echo ""
-  echo -e "\033[32mAPI key configured.\033[0m Sanity check:"
-  echo "  Length: ${#RESOLVED_KEY}"
-  PREFIX="${RESOLVED_KEY:0:7}"
-  echo "  Prefix: ${PREFIX}..."
-else
-  echo ""
-  echo -e "\033[33mWARNING:\033[0m no API key was set. Plugin will return 'missing_key' until you"
-  echo "         add MINIMAX_API_KEY to env or to $DSH_HOME/.credentials.yaml"
-fi
-
+# ---- 6. Next-step instructions -------------------------------------------
 echo ""
-echo -e "\033[36m=== NEXT STEPS ===\033[0m"
+echo -e "\033[36m=== DONE ===\033[0m"
 echo ""
 echo "1. RESTART DSH (the trusted plugin only loads at main-process startup):"
 echo "   - Quit the DSH desktop window completely"
@@ -262,7 +202,7 @@ echo '      的完整 JSON 作为参数（plugin / name / purpose / code 四个�
 echo '   2) 拿到返回的 pluginId 和 packageId 后，cordis_run 调 mode="run"'
 echo '   3) 如果提示 awaiting-approval，请点浏览器顶部的「同意」授权该客户端包'
 echo ""
-echo "   The plugin will mount a \"用量\" section in Settings."
+echo '   The plugin will mount a "用量" section in Settings.'
 echo ""
-echo "3. Open Settings page → \"用量\" section to see the cards."
+echo '3. Open Settings page → "用量" section to see the cards.'
 echo ""

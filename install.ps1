@@ -15,20 +15,18 @@
 # 用法：
 #   .\install.ps1                                 # 本地源码模式
 #   .\install.ps1 -Source npm -NpmName @you/pkg    # npm 模式
-#   .\install.ps1 -ApiKey 'sk-cp-...'             # 直接传 key
-#   .\install.ps1 -SkipKey                        # 只部署，不写 key
 #   .\install.ps1 -DshHome 'D:\custom\.dsh'       # 自定义 DSH home
 #
-# 注意：trusted plugin 修改后必须重启 DSH 主进程才会重新加载。
+# 注意：
+#   - API key (MINIMAX_API_KEY) 由 DSH 自己的 credential 系统管理，本脚本不碰
+#   - trusted plugin 修改后必须重启 DSH 主进程才会重新加载
 
 [CmdletBinding()]
 param(
   [ValidateSet('local', 'npm')]
   [string]$Source = 'local',
   [string]$NpmName = '@floatingdeaming/minimax-usage',
-  [string]$ApiKey = "",
-  [string]$DshHome = "",
-  [switch]$SkipKey
+  [string]$DshHome = ""
 )
 
 $ErrorActionPreference = 'Stop'
@@ -151,7 +149,6 @@ if ($Source -eq 'local') {
         $content += "`n  - minimax-usage`n"
       }
       WriteUtf8NoBom -Path $WorkspaceYaml -Value $content
-      Write-Host "Updated $WorkspaceYaml"
       Write-Host "Added minimax-usage to $WorkspaceYaml"
     } else {
       Write-Host "pnpm-workspace.yaml already lists minimax-usage"
@@ -172,64 +169,9 @@ if (Test-Path $PatchYaml) {
   }
 }
 
-# ---- 6. Configure API key -------------------------------------------------
-$resolvedKey = $null
-if (-not $SkipKey) {
-  if ($ApiKey) {
-    $resolvedKey = $ApiKey.Trim()
-  } elseif ($env:MINIMAX_API_KEY) {
-    $resolvedKey = $env:MINIMAX_API_KEY.Trim()
-    Write-Host "Using existing MINIMAX_API_KEY environment variable."
-  }
-
-  if (-not $resolvedKey) {
-    Write-Host ""
-    Write-Host "MINIMAX_API_KEY is not set."
-    Write-Host "Get your Token Plan key from https://www.minimaxi.com/ (NOT the metered-billing key)."
-    Write-Host ""
-    $secure = Read-Host "Paste your MINIMAX_API_KEY (input hidden if supported)" -AsSecureString
-    if ($secure) {
-      $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-      $resolvedKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-      [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
-    } else {
-      $resolvedKey = Read-Host "Paste your MINIMAX_API_KEY"
-    }
-  }
-
-  if ($resolvedKey) {
-    $credFile = Join-Path $DshHome '.credentials.yaml'
-    $keyLine = "MINIMAX_API_KEY: '" + $resolvedKey.Replace("'", "''") + "'"
-    if (Test-Path $credFile) {
-      $existing = Get-Content $credFile -Raw -ErrorAction SilentlyContinue
-      if ($existing -match '(?m)^\s*MINIMAX_API_KEY\s*:') {
-        $existing = [regex]::Replace($existing, '(?m)^\s*MINIMAX_API_KEY\s*:.*$', $keyLine)
-      } else {
-        if (-not $existing.EndsWith("`n")) { $existing += "`n" }
-        $existing += $keyLine + "`n"
-      }
-      WriteUtf8NoBom -Path $credFile -Value $existing
-    } else {
-      WriteUtf8NoBom -Path $credFile -Value ($keyLine + "`n")
-    }
-    Write-Host "Wrote MINIMAX_API_KEY to $credFile"
-  }
-}
-
-# ---- 7. Summary and next-step instructions --------------------------------
-if ($resolvedKey) {
-  Write-Host ""
-  Write-Host "API key configured. Sanity check:" -ForegroundColor Green
-  Write-Host "  Length: $($resolvedKey.Length)"
-  Write-Host "  Prefix: $($resolvedKey.Substring(0, [Math]::Min(7, $resolvedKey.Length)))..."
-} else {
-  Write-Host ""
-  Write-Host "WARNING: no API key was set. Plugin will return 'missing_key' until you" -ForegroundColor Yellow
-  Write-Host "         add MINIMAX_API_KEY to env or to $DshHome\.credentials.yaml"
-}
-
+# ---- 6. Next-step instructions -------------------------------------------
 Write-Host ""
-Write-Host "=== NEXT STEPS ===" -ForegroundColor Cyan
+Write-Host "=== DONE ===" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. RESTART DSH (the trusted plugin only loads at main-process startup):"
 Write-Host "   - Close the DSH desktop window completely"
@@ -243,7 +185,7 @@ Write-Host '      的完整 JSON 作为参数（plugin / name / purpose / code �
 Write-Host '   2) 拿到返回的 pluginId 和 packageId 后，cordis_run 调 mode="run"'
 Write-Host '   3) 如果提示 awaiting-approval，请点浏览器顶部的「同意」授权该客户端包'
 Write-Host ""
-Write-Host "   The plugin will mount a "用量" section in Settings."
+Write-Host '   The plugin will mount a "用量" section in Settings.'
 Write-Host ""
-Write-Host "3. Open Settings page → "用量" section to see the cards."
+Write-Host '3. Open Settings page → "用量" section to see the cards.'
 Write-Host ""
