@@ -1,16 +1,16 @@
 # cordis.patch.yml — the layer applied when a profile lists this bundle
 #
-# In `dsh plugin add`-driven installs (npm or git), DSH reads this file via
-# the `dsh.bundle.patch` declaration in package.json and inserts the row below
-# into the profile's resolved composition. The `name` field is the npm package
-# name, which Node's module resolver finds because pnpm installs the package
-# into the profile's `node_modules/`.
+# The `name` field MUST match what `install.ps1` writes into the profile's
+# own `cordis.patch.yml` (the npm-alias short name `minimax-usage`). If it
+# were the full scoped name `@floatingdeaming/minimax-usage` instead, DSH
+# would try to create a junction node_modules/minimax-usage →
+# @floatingdeaming/minimax-usage on top of the existing npm-alias directory,
+# which is the destructive failure mode documented in the README.
 #
-# In the legacy install paths (this repo's `install.ps1 -Source local`), the
-# profile's own `cordis.patch.yml` is patched with an equivalent `- insert:`
-# row at the same id, so the two installation surfaces resolve to the same
-# composition.
+# The `id` is the plugin's stable identifier; `name` is what Node's module
+# resolver finds at runtime (the npm alias directory has a name-shim
+# package.json declaring `"name": "minimax-usage"`).
 
 - insert:
     - id: minimax-usage
-      name: '@floatingdeaming/minimax-usage'
+      name: minimax-usage
