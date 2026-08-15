@@ -284,6 +284,178 @@ function apply(ctx) {
     hasApiKey: () => Boolean(resolveApiKey()),
   })
   console.log('[minimax-usage] service provided (ctx.minimaxUsage.getUsage)')
+
+  // ---- JSON-RPC handlers for the browser client ---------------------------
+  // The dynamic plugin's host half did this via `harness.handle(...)` (a global
+  // provided by the dynamic-plugin IIFE wrapper). In the bundle-plugin format
+  // the same call must come from the trusted plugin's apply(ctx). If `harness`
+  // is exposed as a cordis service it's on ctx; otherwise it's a top-level
+  // global. Try ctx first (strict-inject safe), fall back to global.
+  const handlerTarget = (() => {
+    if (ctx && typeof ctx.harness === 'object' && typeof ctx.harness.handle === 'function') {
+      return ctx.harness
+    }
+    if (typeof globalThis.harness === 'object' && typeof globalThis.harness.handle === 'function') {
+      return globalThis.harness
+    }
+    return null
+  })()
+
+  if (handlerTarget) {
+    try {
+      handlerTarget.handle('minimax.getUsage', async (args) => {
+        try {
+          const raw = await ctx.minimaxUsage.getUsage(args || {})
+          return normalizeServiceOutput(raw)
+        } catch (e) {
+          return { ok: false, statusCode: 503, summary: 'MiniMax 用量服务不可用', models: [], errorCode: 'service_unavailable' }
+        }
+      })
+      handlerTarget.handle('minimax.hasApiKey', async () => {
+        try {
+          if (!ctx.minimaxUsage || typeof ctx.minimaxUsage.hasApiKey !== 'function') {
+            return { ok: false, hasKey: false, reason: 'service_unavailable' }
+          }
+          const has = Boolean(ctx.minimaxUsage.hasApiKey())
+          return { ok: true, hasKey: has, reason: has ? 'resolved' : 'missing_key' }
+        } catch (e) {
+          return { ok: false, hasKey: false, reason: 'check_failed' }
+        }
+      })
+      console.log('[minimax-usage] JSON-RPC handlers registered: minimax.getUsage, minimax.hasApiKey')
+    } catch (e) {
+      console.log('[minimax-usage] WARN: failed to register JSON-RPC handlers:', e && e.message)
+    }
+  } else {
+    console.log('[minimax-usage] WARN: harness not available; client UI will show errors when calling host.call()')
+  }
+}
+
+function normalizeModel(m) {
+  if (!m || typeof m !== 'object') return m
+  const out = Object.assign({}, m)
+  out.total5h = num(pick(out, [
+    'total5h', 'total_5h',
+    'intervalTotalCount', 'interval_total_count',
+    'current_interval_total_count'
+  ]))
+  out.remaining5h = num(pick(out, [
+    'remaining5h', 'remaining_5h',
+    'intervalRemainingCount', 'interval_remaining_count'
+  ]))
+  out.used5h = num(pick(out, [
+    'used5h', 'used_5h',
+    'intervalUsageCount', 'interval_usage_count', 'usageCount', 'usage_count',
+    'current_interval_usage_count'
+  ]))
+  out.remainingPercent5h = num(pick(out, [
+    'remainingPercent5h', 'remaining_percent_5h', 'remainingPercent',
+    'intervalRemainsPercent', 'interval_remains_percent',
+    'current_interval_remaining_percent',
+    'availablePercent', 'available_percent'
+  ]))
+  out.usedPercent5h = num(pick(out, [
+    'usedPercent5h', 'used_percent_5h', 'usedPercent',
+    'intervalUsedPercent', 'interval_used_percent',
+    'current_interval_used_percent',
+    'consumedPercent'
+  ]))
+  out.resetIn5hMs = num(pick(out, [
+    'resetIn5hMs', 'reset_in_5h_ms',
+    'remainsTime', 'remains_time'
+  ]))
+  if (out.used5h == null && out.total5h != null && out.remaining5h != null) {
+    out.used5h = out.total5h - out.remaining5h
+  }
+  if (out.used5h == null && out.usedPercent5h != null && out.total5h != null && out.total5h > 0) {
+    out.used5h = out.usedPercent5h / 100 * out.total5h
+  }
+  if (out.used5h == null && out.remainingPercent5h != null && out.total5h != null && out.total5h > 0) {
+    out.used5h = (100 - out.remainingPercent5h) / 100 * out.total5h
+  }
+  if (out.usedPercent5h == null && out.remainingPercent5h != null) {
+    out.usedPercent5h = 100 - out.remainingPercent5h
+  }
+  if (out.usedPercent5h == null && out.used5h != null && out.total5h != null && out.total5h > 0) {
+    out.usedPercent5h = out.used5h / out.total5h * 100
+  }
+  out.totalWeek = num(pick(out, [
+    'totalWeek', 'total_week',
+    'weeklyTotalCount', 'weekly_total_count',
+    'current_weekly_total_count'
+  ]))
+  out.remainingWeek = num(pick(out, [
+    'remainingWeek', 'remaining_week',
+    'weeklyRemainingCount', 'weekly_remaining_count'
+  ]))
+  out.usedWeek = num(pick(out, [
+    'usedWeek', 'used_week',
+    'weeklyUsageCount', 'weekly_usage_count',
+    'current_weekly_usage_count'
+  ]))
+  out.remainingPercentWeek = num(pick(out, [
+    'remainingPercentWeek', 'remaining_percent_week', 'remainingPercentWeekly',
+    'weeklyRemainsPercent', 'weekly_remains_percent',
+    'current_weekly_remaining_percent'
+  ]))
+  out.usedPercentWeek = num(pick(out, [
+    'usedPercentWeek', 'used_percent_week', 'usedPercentWeekly',
+    'weeklyUsedPercent', 'weekly_used_percent',
+    'current_weekly_used_percent'
+  ]))
+  out.resetInWeekMs = num(pick(out, [
+    'resetInWeekMs', 'reset_in_week_ms',
+    'weeklyRemainsTime', 'weekly_remains_time'
+  ]))
+  if (out.usedWeek == null && out.totalWeek != null && out.remainingWeek != null) {
+    out.usedWeek = out.totalWeek - out.remainingWeek
+  }
+  if (out.usedWeek == null && out.usedPercentWeek != null && out.totalWeek != null && out.totalWeek > 0) {
+    out.usedWeek = out.usedPercentWeek / 100 * out.totalWeek
+  }
+  if (out.usedWeek == null && out.remainingPercentWeek != null && out.totalWeek != null && out.totalWeek > 0) {
+    out.usedWeek = (100 - out.remainingPercentWeek) / 100 * out.totalWeek
+  }
+  if (out.usedPercentWeek == null && out.remainingPercentWeek != null) {
+    out.usedPercentWeek = 100 - out.remainingPercentWeek
+  }
+  if (out.usedPercentWeek == null && out.usedWeek != null && out.totalWeek != null && out.totalWeek > 0) {
+    out.usedPercentWeek = out.usedWeek / out.totalWeek * 100
+  }
+  out.modelName = out.modelName || out.model_name || null
+  out.status5h = num(pick(out, [
+    'status5h', 'status_5h',
+    'intervalStatus', 'interval_status',
+    'current_interval_status'
+  ]))
+  out.statusWeek = num(pick(out, [
+    'statusWeek', 'status_week',
+    'weeklyStatus', 'weekly_status',
+    'current_weekly_status'
+  ]))
+  return out
+}
+
+function normalizeServiceOutput(raw) {
+  if (!raw || typeof raw !== 'object') return raw
+  const out = Object.assign({}, raw)
+  if (Array.isArray(raw.model_remains)) {
+    out.models = raw.model_remains.map(normalizeModel)
+  } else if (Array.isArray(raw.models)) {
+    out.models = raw.models.map(normalizeModel)
+  }
+  if (raw.base_resp) {
+    out.statusCode = raw.base_resp.status_code ?? out.statusCode
+    out.summary = raw.base_resp.status_msg ?? out.summary
+  }
+  return out
+}
+
+function pick(obj, keys) {
+  for (const k of keys) {
+    if (obj[k] != null) return obj[k]
+  }
+  return null
 }
 
 export { apply, name, inject }

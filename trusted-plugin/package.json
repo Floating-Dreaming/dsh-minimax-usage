@@ -1,20 +1,29 @@
 {
   "name": "@floatingdeaming/minimax-usage",
-  "version": "1.0.2",
-  "description": "DSH trusted plugin: provides ctx.minimaxUsage (getUsage / hasApiKey) by calling the MiniMax Token Plan API at /v1/token_plan/remains. Pairs with the dynamic minimax-usage client plugin for the Settings page UI.",
+  "version": "1.0.3",
+  "description": "DSH bundle plugin: provides ctx.minimaxUsage service, registers minimax.getUsage / minimax.hasApiKey JSON-RPC handlers, and ships a browser client that renders the 「用量」 section in Settings (one `dsh plugin add` installs everything).",
   "type": "module",
   "main": "index.js",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./client": "./client.js"
   },
   "files": [
     "index.js",
+    "client.js",
     "cordis.patch.yml",
     "README.md"
   ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
     }
   },
   "scripts": {
