@@ -1,0 +1,38 @@
+# Files NOT to publish (the `files` array in package.json already controls
+# this, but .npmignore acts as a safety net).
+
+# Source control
+.git/
+.gitignore
+.gitattributes
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+node_modules/
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+
+# CI / dev configs
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Anything else from the parent repo that doesn't belong in this package
+../
+install.*
+README.md
+changelog.md
+cordis_define_payload.json
+package.json

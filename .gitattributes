@@ -1,0 +1,35 @@
+# Auto-detect text files and normalize line endings on commit.
+# This prevents CRLF / LF mix-ups across Windows / macOS / Linux contributors.
+* text=auto eol=lf
+
+# Shell scripts must always be LF (bash on macOS / Linux rejects CRLF).
+*.sh text eol=lf
+install.sh text eol=lf
+publish.sh text eol=lf
+
+# PowerShell scripts: keep the native CRLF Windows users expect.
+*.ps1 text eol=crlf
+install.ps1 text eol=crlf
+publish.ps1 text eol=crlf
+
+# Documentation is LF for cross-platform diff cleanliness.
+*.md text eol=lf
+README.md text eol=lf
+changelog.md text eol=lf
+trusted-plugin/README.md text eol=lf
+
+# JSON: always LF (Node / npm tooling assumes LF).
+*.json text eol=lf
+cordis_define_payload.json text eol=lf
+trusted-plugin/package.json text eol=lf
+package.json text eol=lf
+
+# Node modules: never touch.
+node_modules/ -text
+
+# Binary / lockfiles: keep verbatim.
+*.png binary
+*.jpg binary
+*.gif binary
+pnpm-lock.yaml binary
+package-lock.json binary

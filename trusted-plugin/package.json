@@ -1,0 +1,42 @@
+{
+  "name": "@dsh-extras/minimax-usage",
+  "version": "1.0.0",
+  "description": "DSH trusted plugin: provides ctx.minimaxUsage (getUsage / hasApiKey) by calling the MiniMax Token Plan API at /v1/token_plan/remains. Pairs with the dynamic minimax-usage client plugin for the Settings page UI.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "scripts": {
+    "prepublishOnly": "node -e \"const p=require('./package.json');if(!p.name)throw new Error('name required');if(!/^@?[a-z0-9][a-z0-9._-]*\\/[a-z0-9._-]+$|^[a-z0-9][a-z0-9._-]*$/.test(p.name))throw new Error('invalid package name: '+p.name);console.log('OK to publish',p.name,'@',p.version);\""
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "minimax",
+    "minimax-usage",
+    "trusted-plugin",
+    "cordis"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/dsh-minimax-usage.git",
+    "directory": "trusted-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/dsh-minimax-usage/issues"
+  },
+  "homepage": "https://github.com/your-org/dsh-minimax-usage#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

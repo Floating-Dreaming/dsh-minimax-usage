@@ -1,0 +1,25 @@
+# Node / pnpm
+node_modules/
+.pnpm-store/
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Local secrets / keys (NEVER commit)
+.env
+.env.local
+*.pem
