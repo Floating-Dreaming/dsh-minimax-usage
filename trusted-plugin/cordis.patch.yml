@@ -1,0 +1,16 @@
+# cordis.patch.yml — the layer applied when a profile lists this bundle
+#
+# In `dsh plugin add`-driven installs (npm or git), DSH reads this file via
+# the `dsh.bundle.patch` declaration in package.json and inserts the row below
+# into the profile's resolved composition. The `name` field is the npm package
+# name, which Node's module resolver finds because pnpm installs the package
+# into the profile's `node_modules/`.
+#
+# In the legacy install paths (this repo's `install.ps1 -Source local`), the
+# profile's own `cordis.patch.yml` is patched with an equivalent `- insert:`
+# row at the same id, so the two installation surfaces resolve to the same
+# composition.
+
+- insert:
+    - id: minimax-usage
+      name: '@floatingdeaming/minimax-usage'
