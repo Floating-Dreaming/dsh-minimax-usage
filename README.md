@@ -47,12 +47,6 @@ DSH 插件，在设置页的「用量」section 渲染 MiniMax Token Plan 实时
 6. 写 `~/.dsh/.credentials.yaml`（如果给了 key）
 7. 跑 `npm install`（默认；pnpm 也会试）
 
-### 为什么不用 `dsh plugin add`
-
-`trusted-plugin/` 声明了 `dsh.bundle` manifest，理论上 `dsh plugin --profile web add @floatingdeaming/minimax-usage` 也能跑通。但 `dsh plugin add` 内部转发给 `pnpm add`，如果你的 home 目录自己是个 pnpm workspace（很多 DSH 用户的 `~/.npmrc` 旁边就放着 `pnpm-workspace.yaml`），pnpm 会拒绝给 profile 子目录添加 dep，**装不成功**。
-
-`install.ps1` / `install.sh` 不依赖 pnpm 的 workspace 检测，直接写文件再用 `npm install` 收尾，所以在所有 DSH profile 布局下都能跑通。
-
 ## 装完之后
 
 1. **重启 DSH**（trusted plugin 必须重启主进程才加载）
